@@ -3,6 +3,7 @@ package authservice
 import (
 	"fmt"
 	"os"
+	"strconv"
 )
 
 // Config here goes the configuration variables for this app
@@ -13,6 +14,17 @@ type Config struct {
 		Password string
 		Host     string
 		Port     string
+	}
+	App struct {
+		JWTKey     string
+		JWTExpTime int
+		Domain     string
+	}
+	Mail struct {
+		Host     string
+		Port     string
+		From     string
+		Password string
 	}
 }
 
@@ -33,6 +45,13 @@ func GetConfig() (Config, error) {
 		"DB_PASSWORD",
 		"DB_HOST",
 		"DB_PORT",
+		"JWT_KEY",
+		"JWT_EXP_TIME",
+		"APP_DOMAIN",
+		"EMAIL_HOST",
+		"EMAIL_PORT",
+		"EMAIL_FROM",
+		"EMAIL_PASSWORD",
 	}
 	for _, key := range envKeys {
 		if err := checkEnv(key); err != nil {
@@ -44,22 +63,24 @@ func GetConfig() (Config, error) {
 	conf.DB.Password = os.Getenv("DB_PASSWORD")
 	conf.DB.Host = os.Getenv("DB_HOST")
 	conf.DB.Port = os.Getenv("DB_PORT")
+	conf.App.JWTKey = os.Getenv("JWT_KEY")
+	duration, err := strconv.Atoi(os.Getenv("JWT_EXP_TIME"))
+	if err != nil {
+		return conf, fmt.Errorf("JWT_EXP_TIME env variable must be a integer value: %s", err.Error())
+	}
+	conf.App.JWTExpTime = duration
+	conf.App.Domain = os.Getenv("APP_DOMAIN")
+	conf.Mail.Host = os.Getenv("EMAIL_HOST")
+	conf.Mail.Port = os.Getenv("EMAIL_PORT")
+	conf.Mail.From = os.Getenv("EMAIL_FROM")
+	conf.Mail.Password = os.Getenv("EMAIL_PASSWORD")
 	return conf, nil
-}
-
-// SetEnvs this will set the env variables needed to connect a db, just for testing purposes
-func SetEnvs() {
-	os.Setenv("DB_USER", "postgres")
-	os.Setenv("DB_NAME", "duiztdb")
-	os.Setenv("DB_PASSWORD", "12345")
-	os.Setenv("DB_HOST", "localhost")
-	os.Setenv("DB_PORT", "5432")
 }
 
 func checkEnv(key string) error {
 	value := os.Getenv(key)
 	if value == "" {
-		return fmt.Errorf("env variable %s is empty, maybe is not providec", key)
+		return fmt.Errorf("env variable %s is empty", key)
 	}
 	return nil
 }

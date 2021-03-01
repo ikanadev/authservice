@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/vmkevv/authservice/ent"
+	"github.com/vmkevv/authservice/ent/user"
 )
 
 // User all user actions
@@ -12,37 +13,27 @@ type User struct {
 	ent *ent.Client
 }
 
+// SetUpUser creates an instance of User
+func SetUpUser(ctx context.Context, client *ent.Client) User {
+	return User{ctx, client}
+}
+
 // Register register a new user with basic info
-func (u *User) Register(name, lastName, email string) (*ent.User, error) {
-	return nil, nil
-}
-
-// Update updates user info
-func (u *User) Update(name, lastName, profilePicture, email, phone, about string) (*ent.User, error) {
-	return nil, nil
-}
-
-// UpdateRole updates user current role
-func (u *User) UpdateRole(role int8) (*ent.User, error) {
-	return nil, nil
-}
-
-// SendEmailToken sends the login magic link to user email
-func (u *User) SendEmailToken(email string) error {
-	return nil
-}
-
-// GenerateToken generates a user token based in user ID and role
-func (u *User) GenerateToken(ID int, role int8) (string, error) {
-	return "", nil
+func (u User) Register(name, lastName, email string) (*ent.User, error) {
+	return u.ent.User.Create().SetName(name).SetLastName(lastName).SetEmail(email).Save(u.ctx)
 }
 
 // ExistEmail check if an email already exists in database
-func (u *User) ExistEmail(email string) bool {
-	return false
+func (u User) ExistEmail(email string) (bool, error) {
+	return u.ent.User.Query().Where(user.EmailEQ(email)).Exist(u.ctx)
 }
 
-// GetUserByToken get user info by token
-func (u *User) GetUserByToken(token string) (*ent.User, error) {
-	return nil, nil
+// GetUserByEmail get user by email
+func (u User) GetUserByEmail(email string) (*ent.User, error) {
+	return u.ent.User.Query().Where(user.EmailEQ(email)).First(u.ctx)
+}
+
+// GetUserByID get user info by ID
+func (u User) GetUserByID(ID int) (*ent.User, error) {
+	return u.ent.User.Get(u.ctx, ID)
 }
